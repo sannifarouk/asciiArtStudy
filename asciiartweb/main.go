@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"html/template"
@@ -15,19 +14,11 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("templates/asciiart.html")
 	
 	if err != nil {
-		fmt.Println("Error!", err)
+		http.Error(w, "Template not found", http.StatusNotFound) // 404
 		return 
 	}
 
-	data := struct {
-		Text string
-		Banner string
-	} {
-		Text: "hello",
-		Banner: "shadow",
-	}
-
-	tmpl.Execute(w, data)
+	tmpl.Execute(w, nil)
 
 }
 
@@ -35,15 +26,32 @@ func AsciiArtWeb(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	text := r.FormValue("text")
 	banner := r.FormValue("banner")
-	result := asciiart.AsciiArt(text, banner)
-
-
-	tmpl, err := template.ParseFiles("templates/result.html")
 	
+	if text == "" {
+		http.Error(w, "Empty text submitted", http.StatusBadRequest) // 400
+		return
+	}
+
+	if banner == "" {
+		http.Error(w, "No banner selected", http.StatusBadRequest) // 400
+		return
+	}
+
+	result, err := asciiart.AsciiArt(text, banner)
 	if err != nil {
-		fmt.Println("Error!", err)
+		http.Error(w, "File not found", http.StatusNotFound) // 404
+		return
+	}
+
+	tmpl, err := template.ParseFiles("templates/asciiart.html")
+	if err != nil {
+		// fmt.Println("Error!", err)
+		http.Error(w, "Template Error", http.StatusInternalServerError) // 500
 		return 
 	}
+
+	w.WriteHeader(http.StatusOK) // 200
+	// fmt.Fprintln(w, "Success")
 
 	data := struct {
 		Result string
@@ -51,8 +59,7 @@ func AsciiArtWeb(w http.ResponseWriter, r *http.Request) {
 		Result: result,
 	}
 
-	tmpl.Execute(w, data)
-	
+	tmpl.Execute(w, data)	
 }
 
 func main() {

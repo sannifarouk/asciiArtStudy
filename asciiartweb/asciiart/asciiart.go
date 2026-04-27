@@ -1,21 +1,19 @@
 package asciiart
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )	
 
-func AsciiArt(text string, banner string) string {
+func AsciiArt(text string, banner string) (string, error) {
 
 	bannerFile, err := os.ReadFile("asciiart/" + banner + ".txt")
 	if err != nil {
-		fmt.Println("Error!", err)
-		return ""
+		return "", err
 	}
 
 	splitBanner := strings.Split(string(bannerFile), "\n")
-	splitInput := strings.Split(text, "\\n")
+	splitInput := strings.Split(text, "\n")
 	
 	output := ""
 
@@ -30,7 +28,9 @@ func AsciiArt(text string, banner string) string {
 		}
 	}
 
-	return output
+	// fmt.Println("splitInput:", splitInput)
+
+	return output, err
 
 }
 
